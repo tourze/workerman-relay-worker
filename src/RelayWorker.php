@@ -6,6 +6,8 @@ use Tourze\Workerman\ConnectionPipe\Enum\ProtocolFamily;
 use Tourze\Workerman\ConnectionPipe\Model\Address;
 use Tourze\Workerman\ConnectionPipe\Pipe\AbstractConnectionPipe;
 use Tourze\Workerman\ConnectionPipe\PipeFactory;
+use Tourze\Workerman\RelayWorker\LoadBalancer\LoadBalancerInterface;
+use Tourze\Workerman\RelayWorker\LoadBalancer\RoundRobinLoadBalancer;
 use WeakMap;
 use Workerman\Connection\AsyncTcpConnection;
 use Workerman\Connection\AsyncUdpConnection;
@@ -26,28 +28,105 @@ class RelayWorker extends Worker
         $this->onMessage = $this->onMessage(...);
     }
 
-    private static ?WeakMap $targetMap = null;
+    /**
+     * @var WeakMap<ConnectionInterface, Address[]>|null
+     */
+    private static ?WeakMap $targetsMap = null;
 
-    private static function initTargetMap(): void
+    /**
+     * @var WeakMap<ConnectionInterface, LoadBalancerInterface>|null
+     */
+    private static ?WeakMap $loadBalancerMap = null;
+
+    private static function initMaps(): void
     {
-        if (self::$targetMap === null) {
-            self::$targetMap = new WeakMap();
+        if (self::$targetsMap === null) {
+            self::$targetsMap = new WeakMap();
+        }
+
+        if (self::$loadBalancerMap === null) {
+            self::$loadBalancerMap = new WeakMap();
         }
     }
 
+    /**
+     * 获取连接的所有目标地址
+     *
+     * @param ConnectionInterface $connection 连接
+     * @return Address[] 目标地址数组
+     */
+    public static function getTargets(ConnectionInterface $connection): array
+    {
+        self::initMaps();
+        return self::$targetsMap[$connection] ?? [];
+    }
+
+    /**
+     * 获取负载均衡器选择的目标地址
+     *
+     * @param ConnectionInterface $connection 连接
+     * @return ?Address 选择的目标地址
+     */
     public static function getTarget(ConnectionInterface $connection): ?Address
     {
-        self::initTargetMap();
-        return self::$targetMap[$connection] ?? null;
+        $targets = self::getTargets($connection);
+        if (empty($targets)) {
+            return null;
+        }
+
+        self::initMaps();
+        $loadBalancer = self::$loadBalancerMap[$connection] ?? null;
+
+        if ($loadBalancer === null) {
+            // 默认使用轮询负载均衡器
+            $loadBalancer = new RoundRobinLoadBalancer();
+            self::$loadBalancerMap[$connection] = $loadBalancer;
+        }
+
+        return $loadBalancer->select($targets);
     }
 
-    public static function setTarget(ConnectionInterface $connection, Address $address): void
+    /**
+     * 设置连接的多个目标地址
+     *
+     * @param ConnectionInterface $connection 连接
+     * @param Address[] $addresses 目标地址数组
+     */
+    public static function setTargets(ConnectionInterface $connection, array $addresses): void
     {
-        self::initTargetMap();
-        self::$targetMap[$connection] = $address;
+        self::initMaps();
+        self::$targetsMap[$connection] = $addresses;
     }
 
-    private static WeakMap $bufferMap;
+    /**
+     * 为连接添加一个目标地址
+     *
+     * @param ConnectionInterface $connection 连接
+     * @param Address $address 目标地址
+     */
+    public static function addTarget(ConnectionInterface $connection, Address $address): void
+    {
+        $targets = self::getTargets($connection);
+        $targets[] = $address;
+        self::setTargets($connection, $targets);
+    }
+
+    /**
+     * 设置连接的负载均衡器
+     *
+     * @param ConnectionInterface $connection 连接
+     * @param LoadBalancerInterface $loadBalancer 负载均衡器
+     */
+    public static function setLoadBalancer(ConnectionInterface $connection, LoadBalancerInterface $loadBalancer): void
+    {
+        self::initMaps();
+        self::$loadBalancerMap[$connection] = $loadBalancer;
+    }
+
+    /**
+     * @var WeakMap<ConnectionInterface, string>|null
+     */
+    private static ?WeakMap $bufferMap = null;
 
     private static function initBufferMap(): void
     {
@@ -62,13 +141,15 @@ class RelayWorker extends Worker
         if (isset(self::$bufferMap[$connection])) {
             $buffer = self::$bufferMap[$connection] . $buffer;
         }
-        self::$targetMap[$connection] = $buffer;
+        self::$bufferMap[$connection] = $buffer;
     }
 
     private static function popBuffer(ConnectionInterface $connection): string
     {
         self::initBufferMap();
-        return self::$targetMap[$connection] ?? '';
+        $buffer = self::$bufferMap[$connection] ?? '';
+        unset(self::$bufferMap[$connection]);
+        return $buffer;
     }
 
     protected function onMessage(ConnectionInterface $connection, string $buffer): void
