@@ -38,13 +38,13 @@ class RelayWorker extends Worker
     public static function getTarget(ConnectionInterface $connection): ?Address
     {
         self::initTargetMap();
-        return self::$targetMap[$connection->getSocket()] ?? null;
+        return self::$targetMap[$connection] ?? null;
     }
 
     public static function setTarget(ConnectionInterface $connection, Address $address): void
     {
         self::initTargetMap();
-        self::$targetMap[$connection->getSocket()] = $address;
+        self::$targetMap[$connection] = $address;
     }
 
     private static WeakMap $bufferMap;
