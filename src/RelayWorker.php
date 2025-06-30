@@ -6,6 +6,7 @@ use Tourze\Workerman\ConnectionPipe\Enum\ProtocolFamily;
 use Tourze\Workerman\ConnectionPipe\Model\Address;
 use Tourze\Workerman\ConnectionPipe\Pipe\AbstractConnectionPipe;
 use Tourze\Workerman\ConnectionPipe\PipeFactory;
+use Tourze\Workerman\RelayWorker\Exception\ConnectionException;
 use Tourze\Workerman\RelayWorker\LoadBalancer\LoadBalancerInterface;
 use Tourze\Workerman\RelayWorker\LoadBalancer\RoundRobinLoadBalancer;
 use WeakMap;
@@ -204,6 +205,6 @@ class RelayWorker extends Worker
                 return PipeFactory::createUdpToUdp($source, $target);
             }
         }
-        throw new \RuntimeException('找不到合适的转发逻辑');
+        throw new ConnectionException('找不到合适的转发逻辑');
     }
 }

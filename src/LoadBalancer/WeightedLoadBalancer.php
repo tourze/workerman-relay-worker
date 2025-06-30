@@ -3,6 +3,8 @@
 namespace Tourze\Workerman\RelayWorker\LoadBalancer;
 
 use Tourze\Workerman\ConnectionPipe\Model\Address;
+use Tourze\Workerman\RelayWorker\Exception\InvalidWeightException;
+use Tourze\Workerman\RelayWorker\Exception\NoAvailableWorkersException;
 
 /**
  * 权重负载均衡器
@@ -27,7 +29,7 @@ class WeightedLoadBalancer implements LoadBalancerInterface
     public function setWeight(Address $address, int $weight): void
     {
         if ($weight < 1) {
-            throw new \InvalidArgumentException('权重值必须大于等于1');
+            throw new InvalidWeightException('权重值必须大于等于1');
         }
 
         $key = $this->getAddressKey($address);
@@ -63,7 +65,7 @@ class WeightedLoadBalancer implements LoadBalancerInterface
     public function select(array $targets): Address
     {
         if (empty($targets)) {
-            throw new \InvalidArgumentException('目标地址列表不能为空');
+            throw new NoAvailableWorkersException('目标地址列表不能为空');
         }
 
         // 总权重

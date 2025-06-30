@@ -3,6 +3,7 @@
 namespace Tourze\Workerman\RelayWorker\LoadBalancer;
 
 use Tourze\Workerman\ConnectionPipe\Model\Address;
+use Tourze\Workerman\RelayWorker\Exception\NoAvailableWorkersException;
 
 /**
  * 轮询负载均衡器
@@ -21,7 +22,7 @@ class RoundRobinLoadBalancer implements LoadBalancerInterface
     public function select(array $targets): Address
     {
         if (empty($targets)) {
-            throw new \InvalidArgumentException('目标地址列表不能为空');
+            throw new NoAvailableWorkersException('目标地址列表不能为空');
         }
 
         // 计算实际索引
