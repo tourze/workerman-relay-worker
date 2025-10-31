@@ -2,27 +2,31 @@
 
 declare(strict_types=1);
 
-namespace Tourze\Workerman\RelayWorker\Tests\Unit\Exception;
+namespace Tourze\Workerman\RelayWorker\Tests\Exception;
 
-use PHPUnit\Framework\TestCase;
-use RuntimeException;
+use PHPUnit\Framework\Attributes\CoversClass;
+use Tourze\PHPUnitBase\AbstractExceptionTestCase;
 use Tourze\Workerman\RelayWorker\Exception\ConnectionException;
 
-final class ConnectionExceptionTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(ConnectionException::class)]
+final class ConnectionExceptionTest extends AbstractExceptionTestCase
 {
     public function testExceptionInstanceOf(): void
     {
         $exception = new ConnectionException();
-        
+
         $this->assertInstanceOf(ConnectionException::class, $exception);
-        $this->assertInstanceOf(RuntimeException::class, $exception);
+        $this->assertInstanceOf(\RuntimeException::class, $exception);
     }
 
     public function testExceptionWithMessage(): void
     {
         $message = 'Connection failed';
         $exception = new ConnectionException($message);
-        
+
         $this->assertSame($message, $exception->getMessage());
     }
 
@@ -31,16 +35,16 @@ final class ConnectionExceptionTest extends TestCase
         $message = 'Connection timeout';
         $code = 100;
         $exception = new ConnectionException($message, $code);
-        
+
         $this->assertSame($message, $exception->getMessage());
         $this->assertSame($code, $exception->getCode());
     }
 
     public function testExceptionWithPrevious(): void
     {
-        $previous = new RuntimeException('Previous error');
+        $previous = new \RuntimeException('Previous error');
         $exception = new ConnectionException('Connection error', 0, $previous);
-        
+
         $this->assertSame($previous, $exception->getPrevious());
     }
 }

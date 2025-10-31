@@ -11,8 +11,6 @@ class LoadBalancerFactory
 {
     /**
      * 创建轮询负载均衡器
-     *
-     * @return LoadBalancerInterface
      */
     public static function createRoundRobin(): LoadBalancerInterface
     {
@@ -21,8 +19,6 @@ class LoadBalancerFactory
 
     /**
      * 创建随机负载均衡器
-     *
-     * @return LoadBalancerInterface
      */
     public static function createRandom(): LoadBalancerInterface
     {
@@ -31,8 +27,6 @@ class LoadBalancerFactory
 
     /**
      * 创建最少连接负载均衡器
-     *
-     * @return LoadBalancerInterface
      */
     public static function createLeastConnections(): LoadBalancerInterface
     {
@@ -41,8 +35,6 @@ class LoadBalancerFactory
 
     /**
      * 创建权重负载均衡器
-     *
-     * @return LoadBalancerInterface
      */
     public static function createWeighted(): LoadBalancerInterface
     {
@@ -53,7 +45,6 @@ class LoadBalancerFactory
      * 创建IP哈希负载均衡器
      *
      * @param ConnectionInterface|null $connection 客户端连接
-     * @return LoadBalancerInterface
      */
     public static function createIPHash(?ConnectionInterface $connection = null): LoadBalancerInterface
     {

@@ -2,15 +2,20 @@
 
 namespace Tourze\Workerman\RelayWorker\Tests\LoadBalancer;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tourze\Workerman\ConnectionPipe\Enum\ProtocolFamily;
 use Tourze\Workerman\ConnectionPipe\Model\Address;
+use Tourze\Workerman\RelayWorker\Exception\NoAvailableWorkersException;
 use Tourze\Workerman\RelayWorker\LoadBalancer\RoundRobinLoadBalancer;
 
 /**
  * 轮询负载均衡器测试
+ *
+ * @internal
  */
-class RoundRobinLoadBalancerTest extends TestCase
+#[CoversClass(RoundRobinLoadBalancer::class)]
+final class RoundRobinLoadBalancerTest extends TestCase
 {
     /**
      * 测试空目标列表抛出异常
@@ -19,7 +24,7 @@ class RoundRobinLoadBalancerTest extends TestCase
     {
         $balancer = new RoundRobinLoadBalancer();
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(NoAvailableWorkersException::class);
         $this->expectExceptionMessage('目标地址列表不能为空');
 
         $balancer->select([]);
@@ -96,5 +101,27 @@ class RoundRobinLoadBalancerTest extends TestCase
         // 溢出后应继续正常工作
         $selected = $balancer->select($targets);
         $this->assertSame($targets[0], $selected);
+    }
+
+    /**
+     * 测试select方法基本功能
+     */
+    public function testSelect(): void
+    {
+        $balancer = new RoundRobinLoadBalancer();
+
+        // 测试单个目标
+        $target = Address::create('127.0.0.1', 8080, ProtocolFamily::TCP);
+        $selected = $balancer->select([$target]);
+        $this->assertSame($target, $selected);
+
+        // 测试多个目标
+        $targets = [
+            Address::create('192.168.1.1', 8080, ProtocolFamily::TCP),
+            Address::create('192.168.1.2', 8080, ProtocolFamily::TCP),
+        ];
+
+        $selected = $balancer->select($targets);
+        $this->assertContains($selected, $targets);
     }
 }

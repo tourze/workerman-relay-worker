@@ -15,8 +15,6 @@ class IPHashLoadBalancer implements LoadBalancerInterface
 {
     /**
      * 客户端连接
-     *
-     * @var ConnectionInterface|null
      */
     private ?ConnectionInterface $connection = null;
 
@@ -47,15 +45,16 @@ class IPHashLoadBalancer implements LoadBalancerInterface
 
     public function select(array $targets): Address
     {
-        if (empty($targets)) {
+        if ([] === $targets) {
             throw new NoAvailableWorkersException('目标地址列表不能为空');
         }
 
-        if ($this->connection === null) {
+        if (null === $this->connection) {
             // 如果没有连接信息，退化为轮询
-            if (self::$roundRobinInstance === null) {
+            if (null === self::$roundRobinInstance) {
                 self::$roundRobinInstance = new RoundRobinLoadBalancer();
             }
+
             return self::$roundRobinInstance->select($targets);
         }
 
@@ -76,17 +75,18 @@ class IPHashLoadBalancer implements LoadBalancerInterface
      */
     private function getClientIp(): string
     {
-        if ($this->connection === null) {
+        if (null === $this->connection) {
             return '127.0.0.1';
         }
 
         $remoteAddress = $this->connection->getRemoteAddress();
-        if (empty($remoteAddress)) {
+        if ('' === $remoteAddress) {
             return '127.0.0.1';
         }
 
         // 解析地址中的IP部分
         $parts = explode(':', $remoteAddress);
+
         return $parts[0] ?? '127.0.0.1';
     }
 }

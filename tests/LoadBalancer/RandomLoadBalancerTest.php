@@ -2,15 +2,20 @@
 
 namespace Tourze\Workerman\RelayWorker\Tests\LoadBalancer;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tourze\Workerman\ConnectionPipe\Enum\ProtocolFamily;
 use Tourze\Workerman\ConnectionPipe\Model\Address;
+use Tourze\Workerman\RelayWorker\Exception\NoAvailableWorkersException;
 use Tourze\Workerman\RelayWorker\LoadBalancer\RandomLoadBalancer;
 
 /**
  * 随机负载均衡器测试
+ *
+ * @internal
  */
-class RandomLoadBalancerTest extends TestCase
+#[CoversClass(RandomLoadBalancer::class)]
+final class RandomLoadBalancerTest extends TestCase
 {
     /**
      * 测试空目标列表抛出异常
@@ -19,7 +24,7 @@ class RandomLoadBalancerTest extends TestCase
     {
         $balancer = new RandomLoadBalancer();
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(NoAvailableWorkersException::class);
         $this->expectExceptionMessage('目标地址列表不能为空');
 
         $balancer->select([]);
@@ -55,7 +60,7 @@ class RandomLoadBalancerTest extends TestCase
         ];
 
         // 多次测试，确保选择的目标始终在目标列表中
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 10; ++$i) {
             $selected = $balancer->select($targets);
             $this->assertContains($selected, $targets);
         }
@@ -80,7 +85,7 @@ class RandomLoadBalancerTest extends TestCase
         $iterations = 100;
 
         // 进行多次选择
-        for ($i = 0; $i < $iterations; $i++) {
+        for ($i = 0; $i < $iterations; ++$i) {
             $selected = $balancer->select($targets);
             $address = $selected->getHost() . ':' . $selected->getPort();
             $selections[$address] = ($selections[$address] ?? 0) + 1;
@@ -93,5 +98,27 @@ class RandomLoadBalancerTest extends TestCase
         foreach ($selections as $count) {
             $this->assertLessThan($iterations, $count);
         }
+    }
+
+    /**
+     * 测试select方法基本功能
+     */
+    public function testSelect(): void
+    {
+        $balancer = new RandomLoadBalancer();
+
+        // 测试单个目标
+        $target = Address::create('127.0.0.1', 8080, ProtocolFamily::TCP);
+        $selected = $balancer->select([$target]);
+        $this->assertSame($target, $selected);
+
+        // 测试多个目标
+        $targets = [
+            Address::create('192.168.1.1', 8080, ProtocolFamily::TCP),
+            Address::create('192.168.1.2', 8080, ProtocolFamily::TCP),
+        ];
+
+        $selected = $balancer->select($targets);
+        $this->assertContains($selected, $targets);
     }
 }

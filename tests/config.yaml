@@ -1,0 +1,33 @@
+framework:
+  test: true
+  
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+    
+  # 负载均衡器服务
+  Tourze\Workerman\RelayWorker\LoadBalancer\IPHashLoadBalancer:
+    public: true
+    
+  Tourze\Workerman\RelayWorker\LoadBalancer\LeastConnectionsLoadBalancer:
+    public: true
+    
+  Tourze\Workerman\RelayWorker\LoadBalancer\RandomLoadBalancer:
+    public: true
+    
+  Tourze\Workerman\RelayWorker\LoadBalancer\RoundRobinLoadBalancer:
+    public: true
+    
+  Tourze\Workerman\RelayWorker\LoadBalancer\WeightedLoadBalancer:
+    public: true
+    
+  Tourze\Workerman\RelayWorker\LoadBalancer\LoadBalancerFactory:
+    public: true
+    
+  # RelayWorker 服务
+  Tourze\Workerman\RelayWorker\RelayWorker:
+    public: true
+    arguments:
+      $socketName: 'tcp://0.0.0.0:8080'

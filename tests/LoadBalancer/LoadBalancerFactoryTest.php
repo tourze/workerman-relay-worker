@@ -2,6 +2,7 @@
 
 namespace Tourze\Workerman\RelayWorker\Tests\LoadBalancer;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tourze\Workerman\RelayWorker\LoadBalancer\IPHashLoadBalancer;
 use Tourze\Workerman\RelayWorker\LoadBalancer\LeastConnectionsLoadBalancer;
@@ -14,8 +15,11 @@ use Workerman\Connection\ConnectionInterface;
 
 /**
  * 负载均衡器工厂测试
+ *
+ * @internal
  */
-class LoadBalancerFactoryTest extends TestCase
+#[CoversClass(LoadBalancerFactory::class)]
+final class LoadBalancerFactoryTest extends TestCase
 {
     /**
      * 测试创建轮询负载均衡器

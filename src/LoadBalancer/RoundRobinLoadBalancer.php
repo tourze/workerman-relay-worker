@@ -14,14 +14,12 @@ class RoundRobinLoadBalancer implements LoadBalancerInterface
 {
     /**
      * 当前索引
-     *
-     * @var int
      */
     private int $currentIndex = 0;
 
     public function select(array $targets): Address
     {
-        if (empty($targets)) {
+        if ([] === $targets) {
             throw new NoAvailableWorkersException('目标地址列表不能为空');
         }
 
@@ -29,10 +27,10 @@ class RoundRobinLoadBalancer implements LoadBalancerInterface
         $index = $this->currentIndex % count($targets);
 
         // 更新索引，如果即将溢出则重置
-        if ($this->currentIndex === PHP_INT_MAX) {
+        if (PHP_INT_MAX === $this->currentIndex) {
             $this->currentIndex = 0;
         } else {
-            $this->currentIndex++;
+            ++$this->currentIndex;
         }
 
         // 返回选中的目标

@@ -1,0 +1,48 @@
+services:
+  # 禁用 Doctrine 数据库连接
+  doctrine.dbal.default_connection:
+    class: stdClass
+    public: false
+    
+  doctrine.orm.default_entity_manager:
+    class: stdClass
+    public: false
+    
+  # 负载均衡器服务
+  Tourze\Workerman\RelayWorker\LoadBalancer\IPHashLoadBalancer:
+    autowire: true
+    autoconfigure: true
+    public: true
+    
+  Tourze\Workerman\RelayWorker\LoadBalancer\LeastConnectionsLoadBalancer:
+    autowire: true
+    autoconfigure: true
+    public: true
+    
+  Tourze\Workerman\RelayWorker\LoadBalancer\RandomLoadBalancer:
+    autowire: true
+    autoconfigure: true
+    public: true
+    
+  Tourze\Workerman\RelayWorker\LoadBalancer\RoundRobinLoadBalancer:
+    autowire: true
+    autoconfigure: true
+    public: true
+    
+  Tourze\Workerman\RelayWorker\LoadBalancer\WeightedLoadBalancer:
+    autowire: true
+    autoconfigure: true
+    public: true
+    
+  Tourze\Workerman\RelayWorker\LoadBalancer\LoadBalancerFactory:
+    autowire: true
+    autoconfigure: true
+    public: true
+    
+  # RelayWorker 服务
+  Tourze\Workerman\RelayWorker\RelayWorker:
+    autowire: true
+    autoconfigure: true
+    public: true
+    arguments:
+      $socketName: 'tcp://0.0.0.0:8080'

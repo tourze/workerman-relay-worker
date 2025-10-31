@@ -12,12 +12,9 @@ use Tourze\Workerman\RelayWorker\Exception\NoAvailableWorkersException;
  */
 class RandomLoadBalancer implements LoadBalancerInterface
 {
-    /**
-     * @inheritDoc
-     */
     public function select(array $targets): Address
     {
-        if (empty($targets)) {
+        if ([] === $targets) {
             throw new NoAvailableWorkersException('目标地址列表不能为空');
         }
 

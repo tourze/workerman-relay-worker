@@ -2,15 +2,20 @@
 
 namespace Tourze\Workerman\RelayWorker\Tests\LoadBalancer;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tourze\Workerman\ConnectionPipe\Enum\ProtocolFamily;
 use Tourze\Workerman\ConnectionPipe\Model\Address;
+use Tourze\Workerman\RelayWorker\Exception\NoAvailableWorkersException;
 use Tourze\Workerman\RelayWorker\LoadBalancer\WeightedLoadBalancer;
 
 /**
  * 权重负载均衡器测试
+ *
+ * @internal
  */
-class WeightedLoadBalancerTest extends TestCase
+#[CoversClass(WeightedLoadBalancer::class)]
+final class WeightedLoadBalancerTest extends TestCase
 {
     /**
      * 测试空目标列表抛出异常
@@ -19,7 +24,7 @@ class WeightedLoadBalancerTest extends TestCase
     {
         $balancer = new WeightedLoadBalancer();
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(NoAvailableWorkersException::class);
         $this->expectExceptionMessage('目标地址列表不能为空');
 
         $balancer->select([]);
@@ -101,7 +106,7 @@ class WeightedLoadBalancerTest extends TestCase
         $iterations = 1000;
 
         // 进行多次选择
-        for ($i = 0; $i < $iterations; $i++) {
+        for ($i = 0; $i < $iterations; ++$i) {
             $selected = $balancer->select($targets);
             $address = $selected->getHost() . ':' . $selected->getPort();
             $selections[$address] = ($selections[$address] ?? 0) + 1;
@@ -139,7 +144,7 @@ class WeightedLoadBalancerTest extends TestCase
         $iterations = 1000;
 
         // 进行多次选择
-        for ($i = 0; $i < $iterations; $i++) {
+        for ($i = 0; $i < $iterations; ++$i) {
             $selected = $balancer->select($targets);
             $address = $selected->getHost() . ':' . $selected->getPort();
             $selections[$address] = ($selections[$address] ?? 0) + 1;
@@ -164,5 +169,27 @@ class WeightedLoadBalancerTest extends TestCase
 
         $this->assertGreaterThan(1 / 2 - 0.1, $ratio3);
         $this->assertLessThan(1 / 2 + 0.1, $ratio3);
+    }
+
+    /**
+     * 测试select方法基本功能
+     */
+    public function testSelect(): void
+    {
+        $balancer = new WeightedLoadBalancer();
+
+        // 测试单个目标
+        $target = Address::create('127.0.0.1', 8080, ProtocolFamily::TCP);
+        $selected = $balancer->select([$target]);
+        $this->assertSame($target, $selected);
+
+        // 测试多个目标
+        $targets = [
+            Address::create('192.168.1.1', 8080, ProtocolFamily::TCP),
+            Address::create('192.168.1.2', 8080, ProtocolFamily::TCP),
+        ];
+
+        $selected = $balancer->select($targets);
+        $this->assertContains($selected, $targets);
     }
 }

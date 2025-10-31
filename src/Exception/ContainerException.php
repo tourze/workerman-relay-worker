@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tourze\Workerman\RelayWorker\Exception;
 
-final class NoAvailableWorkersException extends \InvalidArgumentException
+/**
+ * 测试容器异常
+ */
+class ContainerException extends \RuntimeException
 {
 }

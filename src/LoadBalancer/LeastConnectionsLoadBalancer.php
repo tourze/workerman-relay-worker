@@ -30,7 +30,7 @@ class LeastConnectionsLoadBalancer implements LoadBalancerInterface
         if (!isset($this->connectionCount[$key])) {
             $this->connectionCount[$key] = 0;
         }
-        $this->connectionCount[$key]++;
+        ++$this->connectionCount[$key];
     }
 
     /**
@@ -42,7 +42,7 @@ class LeastConnectionsLoadBalancer implements LoadBalancerInterface
     {
         $key = $this->getAddressKey($address);
         if (isset($this->connectionCount[$key]) && $this->connectionCount[$key] > 0) {
-            $this->connectionCount[$key]--;
+            --$this->connectionCount[$key];
         }
     }
 
@@ -50,6 +50,7 @@ class LeastConnectionsLoadBalancer implements LoadBalancerInterface
      * 获取地址唯一标识
      *
      * @param Address $address 目标地址
+     *
      * @return string 地址唯一标识
      */
     private function getAddressKey(Address $address): string
@@ -59,7 +60,7 @@ class LeastConnectionsLoadBalancer implements LoadBalancerInterface
 
     public function select(array $targets): Address
     {
-        if (empty($targets)) {
+        if ([] === $targets) {
             throw new NoAvailableWorkersException('目标地址列表不能为空');
         }
 
@@ -86,11 +87,13 @@ class LeastConnectionsLoadBalancer implements LoadBalancerInterface
      * 获取指定地址的连接计数
      *
      * @param Address $address 目标地址
+     *
      * @return int 连接计数
      */
     private function getConnectionCount(Address $address): int
     {
         $key = $this->getAddressKey($address);
+
         return $this->connectionCount[$key] ?? 0;
     }
-} 
+}

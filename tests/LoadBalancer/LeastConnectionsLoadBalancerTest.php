@@ -2,15 +2,20 @@
 
 namespace Tourze\Workerman\RelayWorker\Tests\LoadBalancer;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tourze\Workerman\ConnectionPipe\Enum\ProtocolFamily;
 use Tourze\Workerman\ConnectionPipe\Model\Address;
+use Tourze\Workerman\RelayWorker\Exception\NoAvailableWorkersException;
 use Tourze\Workerman\RelayWorker\LoadBalancer\LeastConnectionsLoadBalancer;
 
 /**
  * 最少连接负载均衡器测试
+ *
+ * @internal
  */
-class LeastConnectionsLoadBalancerTest extends TestCase
+#[CoversClass(LeastConnectionsLoadBalancer::class)]
+final class LeastConnectionsLoadBalancerTest extends TestCase
 {
     /**
      * 测试空目标列表抛出异常
@@ -19,7 +24,7 @@ class LeastConnectionsLoadBalancerTest extends TestCase
     {
         $balancer = new LeastConnectionsLoadBalancer();
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(NoAvailableWorkersException::class);
         $this->expectExceptionMessage('目标地址列表不能为空');
 
         $balancer->select([]);
@@ -195,5 +200,27 @@ class LeastConnectionsLoadBalancerTest extends TestCase
         $this->assertStringContainsString('udp://', $udpKey);
         $this->assertStringContainsString('192.168.1.1:8080', $tcpKey);
         $this->assertStringContainsString('192.168.1.1:8080', $udpKey);
+    }
+
+    /**
+     * 测试select方法基本功能
+     */
+    public function testSelect(): void
+    {
+        $balancer = new LeastConnectionsLoadBalancer();
+
+        // 测试单个目标
+        $target = Address::create('127.0.0.1', 8080, ProtocolFamily::TCP);
+        $selected = $balancer->select([$target]);
+        $this->assertSame($target, $selected);
+
+        // 测试多个目标
+        $targets = [
+            Address::create('192.168.1.1', 8080, ProtocolFamily::TCP),
+            Address::create('192.168.1.2', 8080, ProtocolFamily::TCP),
+        ];
+
+        $selected = $balancer->select($targets);
+        $this->assertContains($selected, $targets);
     }
 }
