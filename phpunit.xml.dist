@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         cacheResultFile="var/.phpunit.cache/test-results"
+         executionOrder="depends,defects"
+         requireCoverageMetadata="false"
+         beStrictAboutCoverageMetadata="true"
+         beStrictAboutOutputDuringTests="true"
+         beStrictAboutTodoAnnotatedTests="true"
+         convertDeprecationsToExceptions="true"
+         failOnEmptyTestSuite="true"
+         failOnIncomplete="true"
+         failOnRisky="true"
+         failOnSkipped="true"
+         failOnWarning="true"
+         colors="true">
+    <testsuites>
+        <testsuite name="WorkermanRelayWorker Test Suite">
+            <directory>tests</directory>
+            <exclude>tests/_support</exclude>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+</phpunit>
